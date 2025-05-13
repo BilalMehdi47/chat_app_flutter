@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:project/feature/Home/presentation/chats_page.dart';
-import 'package:project/feature/user/presentation/pages/sign_in.dart';
-
+import 'package:project/feature/user/data/models/signin/signin_controller.dart';
+import 'package:project/feature/user/presentation/pages/sign_up.dart';
 import '../../../NavBar/presentation/page/navigation_bar.dart';
 import '../../../app/costants/state_variables.dart';
-import '../../data/models/signup_controller.dart';
 import '../widgets/form_field_widget.dart';
 
-class SignUp extends ConsumerWidget {
-  SignUp({super.key});
+class SignIn extends ConsumerWidget {
+  SignIn({super.key});
 
   static const emailRegex = r"""^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+""";
 
@@ -20,8 +18,8 @@ class SignUp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final signupState = ref.watch(signupControllerProvider);
-    final signupController = ref.read(signupControllerProvider.notifier);
+    final signinState = ref.watch(signinControllerProvider);
+    final signinController = ref.read(signinControllerProvider.notifier);
 
     return SafeArea(
       child: GestureDetector(
@@ -30,7 +28,7 @@ class SignUp extends ConsumerWidget {
         },
         child: Scaffold(
           body: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 40),
+            padding: EdgeInsets.symmetric(horizontal: 40.0, vertical: 40),
             child: Form(
               key: formKey,
               child: Column(
@@ -66,19 +64,6 @@ class SignUp extends ConsumerWidget {
                         ),
                         SizedBox(height: 10),
                         FormFieldWidget(
-                          label: "Name",
-                          hintText: 'Enter your name',
-                          controller: nameController,
-                          onChanged: (val) => ref.read(nameProvider.notifier).state = val,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Name is required';
-                            }
-                            return null;
-                          },
-                        ),
-                        SizedBox(height: 10),
-                        FormFieldWidget(
                           label: "Email",
                           hintText: 'Enter your email',
                           controller: emailController,
@@ -108,17 +93,17 @@ class SignUp extends ConsumerWidget {
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.indigoAccent,
-                            padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                            padding: EdgeInsets.only(bottom: 12, top: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
                             ),
                           ),
                           onPressed: () async {
                             if (formKey.currentState!.validate()) {
-                              final result = await signupController.signup(context);
+                              final result = await signinController.signin(context);
                               if (result) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Registered successfully!")),
+                                  const SnackBar(content: Text("Signed In!")),
                                 );
                                 Navigator.push(
                                   context,
@@ -128,10 +113,10 @@ class SignUp extends ConsumerWidget {
                             }
                           },
                           child: Center(
-                            child: signupState is AsyncLoading
-                                ? CircularProgressIndicator()
+                            child: signinState is AsyncLoading
+                                ? const CircularProgressIndicator()
                                 : Text(
-                                    'Sign Up',
+                                    'Sign In',
                                     style: TextStyle(color: Colors.white, fontSize: 18),
                                   ),
                           ),
@@ -143,17 +128,17 @@ class SignUp extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Already have an account?",
+                        "Don't have an account?",
                         style: TextStyle(fontSize: 18),
                       ),
                       TextButton(
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => SignIn()),
+                            MaterialPageRoute(builder: (context) => SignUp()),
                           );
                         },
-                        child: Text('Log in', style: TextStyle(fontSize: 18, color: Colors.indigoAccent)),
+                        child: Text('Sign Up', style: TextStyle(fontSize: 18, color: Colors.indigoAccent)),
                       ),
                     ],
                   ),

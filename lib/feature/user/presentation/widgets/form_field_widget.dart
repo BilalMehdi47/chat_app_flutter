@@ -7,6 +7,8 @@ class FormFieldWidget extends StatefulWidget {
   final FormFieldValidator<String>? validator;
   final TextInputType? keyboardType;
   final bool isPassword;
+  final void Function(String)? onChanged;
+
 
   const FormFieldWidget({
     super.key,
@@ -16,13 +18,14 @@ class FormFieldWidget extends StatefulWidget {
     this.validator,
     this.keyboardType,
     this.isPassword = false,
+    this.onChanged,
   });
 
   @override
-  _FormFieldWidgetState createState() => _FormFieldWidgetState();
+  FormFieldWidgetState createState() => FormFieldWidgetState();
 }
 
-class _FormFieldWidgetState extends State<FormFieldWidget> {
+class FormFieldWidgetState extends State<FormFieldWidget> {
   bool _obscureText = true;
 
   final FocusNode _focusNode = FocusNode();
@@ -51,6 +54,7 @@ class _FormFieldWidgetState extends State<FormFieldWidget> {
           style: TextStyle(
             fontSize: 12,
           ),
+          onChanged: widget.onChanged,
           focusNode: _focusNode,
           autovalidateMode: AutovalidateMode.onUserInteraction,
           cursorColor: Colors.indigoAccent,
