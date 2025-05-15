@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
           bodyMedium: TextStyle(color: Colors.black),
         ),
       ),
-      home: SignIn(),
+      home: SignInPage(),
     );
   }
 }

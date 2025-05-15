@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:project/feature/Home/presentation/chats_page.dart';
 import 'package:project/feature/user/presentation/pages/sign_in.dart';
-
 import '../../../NavBar/presentation/page/navigation_bar.dart';
 import '../../../app/costants/state_variables.dart';
-import '../../data/models/signup_controller.dart';
+import '../../data/models/user_model.dart';
+import '../../domain/entities/user_entity.dart';
+import '../riverpod/controller/auth_controller.dart';
 import '../widgets/form_field_widget.dart';
 
 class SignUp extends ConsumerWidget {
@@ -13,15 +13,44 @@ class SignUp extends ConsumerWidget {
 
   static const emailRegex = r"""^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+""";
 
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final signupState = ref.watch(signupControllerProvider);
-    final signupController = ref.read(signupControllerProvider.notifier);
+    // Sync controllers with provider values
+    nameController.text = ref.watch(nameProvider);
+    emailController.text = ref.watch(emailProvider);
+    passwordController.text = ref.watch(passwordProvider);
+
+    // 2. Read auth state and controller
+    final authState = ref.watch(authControllerProvider);
+    final authController = ref.read(authControllerProvider.notifier);
+
+    // 3️⃣ Listen for sign-up success or error
+    ref.listen<AsyncValue<UserModel?>>(authControllerProvider, (prev, next) {
+      next.when(
+        data: (user) {
+          if (user != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Registered successfully!')),
+            );
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => BottomNavBar()),
+            );
+          }
+        },
+        loading: () {},
+        error: (err, _) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(err.toString())),
+          );
+        },
+      );
+    });
 
     return SafeArea(
       child: GestureDetector(
@@ -29,13 +58,14 @@ class SignUp extends ConsumerWidget {
           FocusScope.of(context).unfocus(); // Dismiss the keyboard
         },
         child: Scaffold(
-          body: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 40),
+          body: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 40.0, vertical: 40),
             child: Form(
-              key: formKey,
+              key: _formKey,
               child: Column(
                 children: [
-                  Expanded(
+                  SizedBox(
+                    height: 800,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -69,68 +99,50 @@ class SignUp extends ConsumerWidget {
                           label: "Name",
                           hintText: 'Enter your name',
                           controller: nameController,
-                          onChanged: (val) => ref.read(nameProvider.notifier).state = val,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Name is required';
-                            }
-                            return null;
-                          },
+                          onChanged: (v) => ref.read(nameProvider.notifier).state = v,
+                          validator: (v) => v!.isEmpty ? 'Name is required' : null,
                         ),
                         SizedBox(height: 10),
                         FormFieldWidget(
                           label: "Email",
-                          hintText: 'Enter your email',
+                          hintText: "Enter your email",
                           controller: emailController,
-                          onChanged: (val) => ref.read(emailProvider.notifier).state = val,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Email is required';
-                            }
-                            return null;
-                          },
+                          onChanged: (v) => ref.read(emailProvider.notifier).state = v,
+                          validator: (v) => v!.isEmpty ? 'Email required' : null,
                         ),
                         SizedBox(height: 10),
                         FormFieldWidget(
                           label: "Password",
-                          hintText: 'Enter your password',
+                          hintText: "Enter your password",
                           controller: passwordController,
-                          onChanged: (val) => ref.read(passwordProvider.notifier).state = val,
+                          onChanged: (v) => ref.read(passwordProvider.notifier).state = v,
                           isPassword: true,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Password is required';
-                            }
-                            return null;
-                          },
+                          validator: (v) => v!.isEmpty ? 'Password required' : null,
                         ),
                         SizedBox(height: 150),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.indigoAccent,
-                            padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                            padding: EdgeInsets.only(bottom: 12, top: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
                             ),
                           ),
-                          onPressed: () async {
-                            if (formKey.currentState!.validate()) {
-                              final result = await signupController.signup(context);
-                              if (result) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Registered successfully!")),
-                                );
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => BottomNavBar()),
-                                );
-                              }
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              authController.signUp(
+                                UserEntity(
+                                  name: nameController.text,
+                                  email: emailController.text,
+                                  password: passwordController.text,
+                                ),
+                              );
                             }
                           },
                           child: Center(
-                            child: signupState is AsyncLoading
-                                ? CircularProgressIndicator()
-                                : Text(
+                            child: authState is AsyncLoading
+                                ? const CircularProgressIndicator()
+                                : const Text(
                                     'Sign Up',
                                     style: TextStyle(color: Colors.white, fontSize: 18),
                                   ),
@@ -150,7 +162,7 @@ class SignUp extends ConsumerWidget {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => SignIn()),
+                            MaterialPageRoute(builder: (context) => SignInPage()),
                           );
                         },
                         child: Text('Log in', style: TextStyle(fontSize: 18, color: Colors.indigoAccent)),
