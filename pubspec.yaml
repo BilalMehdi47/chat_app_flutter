@@ -34,6 +34,8 @@ dependencies:
   riverpod_annotation:
   dartz: ^0.10.1
   http:
+  get_it: ^8.0.3
+
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -80,7 +82,8 @@ flutter:
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
-
+  assets:
+    - assets/images/
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
 

@@ -6,7 +6,7 @@ import 'package:project/feature/user/data/data_sources/remote/user_remote_data_s
 import 'package:project/feature/user/data/models/user_model.dart';
 import 'package:project/feature/user/domain/entities/user_entity.dart';
 import 'package:http/http.dart' as http;
-import '../../../../../config/token_handler/access_token_handler.dart';
+import '../../../../../config/token/access_token_handler.dart';
 import '../../../../app/costants/state_variables.dart';
 import '../local/user_shared_pref.dart';
 
@@ -34,15 +34,11 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
 
       // Accept any 2xx response
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseBody = json.decode(response.body) as Map<String, dynamic>;
-
+        final responseBody = json.decode(response.body);
         print("signUpUser responseBody ${response.body}");
-
-        // If your API nests the new user under "data", pass that in:
-        final data = responseBody['data'];
-        return Right(UserModel.fromJson(data as Map<String, dynamic>));
+        return Right(UserModel.fromJson(responseBody as Map<String, dynamic>));
       } else {
-        final responseBody = json.decode(response.body) as Map<String, dynamic>;
+        final responseBody = json.decode(response.body);
         final errorMessage = responseBody['message'] ?? 'Unknown error occurred';
         return Left(ResponseFailure(errorMessage));
       }
@@ -91,7 +87,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   @override
   Future<Either<ResponseFailure, String>> signOutUser() async {
     final String endPoint = "${AppConstant.baseUrl}/auth/signout";
-    print("End point ${endPoint}");
+    print("End point $endPoint");
 
     try {
       String? accessToken = await UserSharedPref.getAccessToken();
@@ -104,15 +100,17 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
 
       final response = await AccessTokenHandler()
           .sendPostRequestWithoutBody(endPoint, AppConstant.headerBearerOptionWithoutContentType(accessToken));
-      final Map<String, dynamic> responseBody = json.decode(response.body);
+      final Map<String, dynamic>? responseBody = json.decode(response.body);
 
       print("logoutUser statusCode ${response.statusCode}");
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         print("logoutUser responseBody ${response.body}");
-        return Right(responseBody['data']['message']);
+        final message = responseBody?['data']?['message'] ?? "Sign-out successful";
+        return Right(message);
       } else {
+        final errorMessage = responseBody?['message'] ?? "Unknown error occurred";
         debugPrint("logoutUser statusCode $responseBody");
-        return Left(ResponseFailure("logoutUser FAILED ${response.statusCode}"));
+        return Left(ResponseFailure("logoutUser FAILED: $errorMessage"));
       }
     } catch (e) {
       print("logoutUser error occur $e");

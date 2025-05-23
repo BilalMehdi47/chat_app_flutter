@@ -30,7 +30,7 @@ class SignInPage extends ConsumerWidget {
       next.when(
         data: (user) {
           if (user != null) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Signed in!')));
+            // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Signed in!')));
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => BottomNavBar()),
