@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../user/data/data_sources/local/user_shared_pref.dart';
+import '../../feature/user/data/data_sources/local/user_shared_pref.dart';
 
 final emailProvider = StateProvider<String>((ref) => '');
 final nameProvider = StateProvider<String>((ref) => '');

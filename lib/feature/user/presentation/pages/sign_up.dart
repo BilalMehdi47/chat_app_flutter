@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:project/app/costants/state_variables.dart';
 import 'package:project/feature/user/presentation/pages/sign_in.dart';
 import '../../../NavBar/presentation/page/navigation_bar.dart';
-import '../../../app/costants/state_variables.dart';
 import '../../data/models/user_model.dart';
 import '../../domain/entities/user_entity.dart';
 import '../riverpod/controller/auth_controller.dart';

@@ -1,8 +1,8 @@
 import 'package:dartz/dartz.dart';
+import 'package:project/app/costants/state_variables.dart';
 import 'package:project/core/error/response_failure.dart';
 import 'package:project/feature/user/data/data_sources/local/user_shared_pref.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../../../app/costants/state_variables.dart';
 import '../../../data/models/user_model.dart';
 import '../../../domain/entities/user_entity.dart';
 import '../auth_riverpod.dart';
@@ -10,6 +10,7 @@ import '../auth_riverpod.dart';
 part 'auth_controller.g.dart';
 
 /// Holds current auth state: loading, data, or error
+/// 
 @riverpod
 class AuthController extends _$AuthController {
   @override

@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:project/app/costants/state_variables.dart';
 import 'package:project/core/error/response_failure.dart';
 import 'package:project/feature/user/data/data_sources/remote/user_remote_data_source.dart';
 import 'package:project/feature/user/data/models/user_model.dart';
 import 'package:project/feature/user/domain/entities/user_entity.dart';
 import 'package:http/http.dart' as http;
 import '../../../../../config/token/access_token_handler.dart';
-import '../../../../app/costants/state_variables.dart';
 import '../local/user_shared_pref.dart';
 
 class UserRemoteDataSourceImpl implements UserRemoteDataSource {
@@ -52,7 +52,7 @@ class UserRemoteDataSourceImpl implements UserRemoteDataSource {
   Future<Either<ResponseFailure, UserModel>> signInUser(UserEntity user) async {
     final String endPoint = "${AppConstant.baseUrl}/auth/signin";
 
-    print("URL: ${endPoint}");
+    print("URL: $endPoint");
     print("loginUser user ${user.email} ${user.password}");
 
     try {

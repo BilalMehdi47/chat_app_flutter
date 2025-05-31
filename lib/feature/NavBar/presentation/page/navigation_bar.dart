@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:project/feature/app/call/presentation/pages/call_page.dart';
-import 'package:project/feature/app/group/presentation/pages/group_page.dart';
+import 'package:project/app/call/presentation/pages/call_page.dart';
+import 'package:project/app/group/presentation/pages/group_page.dart';
 import 'package:project/feature/update/presentation/pages/updates_page.dart';
 import '../../../Chat/presentation/chats_page.dart';
 import '../../../setting/presentation/pages/setting_page.dart';
