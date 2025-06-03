@@ -104,6 +104,17 @@ class AccessTokenHandler {
     return await http.post(Uri.parse(endPoint), headers: headers, body: body);
   }
 
+  Future<http.Response> sendGetRequest(String endPoint, Map<String, String> headers) async {
+    // Add the access token to the headers
+    String? accessToken = await getAccessToken();
+    if (accessToken != null) {
+      headers['Authorization'] = 'Bearer $accessToken';
+    }
+
+    // Send the GET request
+    return await http.get(Uri.parse(endPoint), headers: headers);
+  }
+
   Future<http.Response> sendPostRequestWithoutBody(String endPoint, Map<String, String> headers) async {
     // Add the access token to the headers
     String? accessToken = await getAccessToken();

@@ -1,29 +1,28 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'auth_controller.dart';
+part of 'chat_controller.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$authControllerHash() => r'2bdc56eea4c94cedd6f28e4f09399fa1e63b15d6';
+String _$chatControllerHash() => r'6ccfca19d25ff6de3060e4405e09070a910eb87a';
 
-/// Holds current auth state: loading, data, or error
+/// Holds chat state: loading, data, or error
 ///
-///
-/// Copied from [AuthController].
-@ProviderFor(AuthController)
-final authControllerProvider = AutoDisposeNotifierProvider<AuthController,
-    AsyncValue<UserModel?>>.internal(
-  AuthController.new,
-  name: r'authControllerProvider',
+/// Copied from [ChatController].
+@ProviderFor(ChatController)
+final chatControllerProvider = AutoDisposeNotifierProvider<ChatController,
+    AsyncValue<List<ChatEntity>>>.internal(
+  ChatController.new,
+  name: r'chatControllerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$authControllerHash,
+      : _$chatControllerHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$AuthController = AutoDisposeNotifier<AsyncValue<UserModel?>>;
+typedef _$ChatController = AutoDisposeNotifier<AsyncValue<List<ChatEntity>>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

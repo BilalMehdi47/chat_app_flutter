@@ -14,13 +14,14 @@ class BottomNavBar extends StatefulWidget {
 
 class _BottomNavBarState extends State<BottomNavBar> {
   int _currentIndex = 0;
-  final _titles = [
+  final _titles = const [
     ChatsPage(),
     CallPage(),
     GroupPage(),
     UpdatesPage(),
     SettingPage(),
   ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
