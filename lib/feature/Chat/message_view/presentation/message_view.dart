@@ -1,23 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:project/app/costants/app_images/app_images.dart';
 import 'package:project/feature/Chat/message_view/presentation/widgets/message_widget.dart';
+import 'package:project/feature/Chat/message_view/presentation/Riverpod/message_controller.dart';
 
-class MessageView extends StatefulWidget {
-  const MessageView({super.key});
+class MessageView extends ConsumerStatefulWidget {
+  final String chatGroupId;
+  const MessageView({
+    super.key,
+    required this.chatGroupId,
+  });
 
   @override
-  State<MessageView> createState() => _MessageViewState();
+  ConsumerState<MessageView> createState() => _MessageViewState();
 }
 
-class _MessageViewState extends State<MessageView> {
-  final messages = <ChatMessage>[
-    ChatMessage('Hello there!', false),
-    ChatMessage('Hi! How are you?', true),
-  ];
+class _MessageViewState extends ConsumerState<MessageView> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch messages for this chatGroupId, using a fixed limit & empty cursor
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(messageControllerProvider.notifier).loadChatDetail(
+        chatGroupId: widget.chatGroupId,
+        limit: '50',
+        cursor: '',
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Watch the MessageController’s state (AsyncValue<ChatDetailEntity?>)
+    final messageState = ref.watch(messageControllerProvider);
+
     return SafeArea(
       child: Scaffold(
         resizeToAvoidBottomInset: false,
@@ -28,6 +46,7 @@ class _MessageViewState extends State<MessageView> {
             padding: EdgeInsets.only(top: 10.h, left: 5.w, right: 5.w),
             child: Column(
               children: [
+                // Expanded container with header + messages stack
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
@@ -44,6 +63,7 @@ class _MessageViewState extends State<MessageView> {
                     ),
                     child: Column(
                       children: [
+                        // Header showing partner info (you can replace with dynamic data)
                         ListTile(
                           contentPadding: EdgeInsets.only(left: 10.w),
                           leading: CircleAvatar(
@@ -51,38 +71,92 @@ class _MessageViewState extends State<MessageView> {
                             radius: 25.r,
                             child: IconButton(
                               icon: Icon(Icons.person, size: 25.sp),
-                              onPressed: () {},
+                              onPressed: () {
+                                // Handle partner profile tap if needed
+                              },
                             ),
                           ),
                           trailing: IconButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              // Handle “call” action if needed
+                            },
                             icon: Icon(Icons.phone, size: 20.sp),
                           ),
                           title: Text(
-                            "User",
+                            // Optionally show partner name if you have it cached
+                            "Chat",
                             style: TextStyle(fontSize: 16.sp),
                           ),
                           subtitle: Text(
-                            "tap here for account info",
+                            "Tap here for profile info",
                             style: TextStyle(fontSize: 14.sp),
                           ),
-                          onTap: () {},
+                          onTap: () {
+                            // Navigate to partner’s profile, etc.
+                          },
                         ),
                         SizedBox(height: 10.h),
+
+                        // The main “messages” area:
                         Expanded(
                           child: Stack(
                             children: [
+                              // 1. Background image
                               Positioned.fill(
                                 child: Image.asset(
                                   AppImages.chatBackground4,
                                   fit: BoxFit.cover,
                                 ),
                               ),
+
+                              // 2. Overlay padding + messages list / loading / error
                               Padding(
                                 padding: EdgeInsets.all(12.w),
-                                child: ListView.builder(
-                                  itemCount: messages.length,
-                                  itemBuilder: (_, i) => MessageWidget(messages[i]),
+                                child: messageState.when(
+                                  // a) Data has arrived
+                                  data: (chatDetail) {
+                                    if (chatDetail == null) {
+                                      return const Center(
+                                        child: Text("No messages loaded."),
+                                      );
+                                    }
+
+                                    final msgs = chatDetail.messages;
+                                    if (msgs.isEmpty) {
+                                      return const Center(
+                                        child: Text("No messages yet."),
+                                      );
+                                    }
+
+                                    return ListView.builder(
+                                      itemCount: msgs.length,
+                                      // Build each MessageWidget using your existing model
+                                      itemBuilder: (_, i) {
+                                        final m = msgs[i];
+                                        // Map MessageEntity → ChatMessage
+                                        final chatMsg = ChatMessage(
+                                          m.content,
+                                          m.isSentByUser,
+                                        );
+                                        return MessageWidget(chatMsg);
+                                      },
+                                    );
+                                  },
+
+                                  // b) Loading state
+                                  loading: () => const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+
+                                  // c) Error state
+                                  error: (err, _) {
+                                    final errMsg =
+                                        (err as dynamic).message ??
+                                            "Unknown error";
+                                    return Center(
+                                      child: Text("Error: $errMsg"),
+                                    );
+                                  },
                                 ),
                               ),
                             ],
@@ -92,19 +166,21 @@ class _MessageViewState extends State<MessageView> {
                     ),
                   ),
                 ),
+
+                // SizedBox to separate from the input bar
+                SizedBox(height: 10.h),
               ],
             ),
           ),
         ),
+
+        // Bottom input bar stays the same as your original
         bottomNavigationBar: SafeArea(
           child: AnimatedPadding(
-            duration: Duration(milliseconds: 2),
+            duration: const Duration(milliseconds: 2),
             curve: Curves.easeOut,
             padding: EdgeInsets.only(
-              bottom: MediaQuery
-                  .of(context)
-                  .viewInsets
-                  .bottom,
+              bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
             child: Container(
               decoration: BoxDecoration(
@@ -115,7 +191,7 @@ class _MessageViewState extends State<MessageView> {
                     color: Colors.grey.withOpacity(0.2),
                     spreadRadius: 2,
                     blurRadius: 5,
-                    offset: Offset(0, 3),
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
@@ -128,23 +204,26 @@ class _MessageViewState extends State<MessageView> {
                   SizedBox(width: 8.w),
                   Expanded(
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w,),
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
                       decoration: BoxDecoration(
                         color: Colors.grey[100],
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: TextField(
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           border: InputBorder.none,
                           hintText: 'Message',
                         ),
+                        onSubmitted: (text) {
+                          // TODO: call send‐message use case (not shown)
+                        },
                       ),
                     ),
                   ),
                   IconButton(
                     icon: Icon(Icons.send, color: Colors.indigo, size: 20.sp),
                     onPressed: () {
-                      // send logic
+                      // TODO: call send‐message use case
                     },
                   ),
                 ],
@@ -156,151 +235,3 @@ class _MessageViewState extends State<MessageView> {
     );
   }
 }
-
-  // Widget build(BuildContext context) {
-  //   return SafeArea(
-  //     child: Scaffold(
-  //       resizeToAvoidBottomInset: true,
-  //       body: GestureDetector(
-  //         behavior: HitTestBehavior.translucent,
-  //         onTap: () => FocusScope.of(context).unfocus(),
-  //         child: Padding(
-  //           padding: EdgeInsets.only(
-  //             top: 10.h,
-  //             left: 5.w,
-  //             right: 5.w,
-  //           ),
-  //           child: Column(
-  //             children: [
-  //               Expanded(
-  //                 child: Container(
-  //                   decoration: BoxDecoration(
-  //                     color: Colors.white,
-  //                     borderRadius: BorderRadius.circular(8.r),
-  //                     boxShadow: [
-  //                       BoxShadow(
-  //                         color: Colors.grey.withOpacity(0.2),
-  //                         spreadRadius: 2,
-  //                         blurRadius: 5,
-  //                         offset: Offset(0, 3),
-  //                       ),
-  //                     ],
-  //                   ),
-  //                   child: Column(
-  //                     children: [
-  //                       Row(
-  //                         children: [
-  //                           Expanded(
-  //                             child: ListTile(
-  //                               contentPadding: EdgeInsets.only(left: 10.w),
-  //                               leading: CircleAvatar(
-  //                                 backgroundColor: Colors.grey.shade200,
-  //                                 radius: 25.r,
-  //                                 child: IconButton(
-  //                                   icon: Icon(Icons.person, size: 25.sp),
-  //                                   onPressed: () {},
-  //                                 ),
-  //                               ),
-  //                               trailing: IconButton(
-  //                                 onPressed: () {},
-  //                                 icon: Icon(Icons.phone, size: 20.sp),
-  //                               ),
-  //                               title: Text(
-  //                                 "User",
-  //                                 style: TextStyle(fontSize: 16.sp),
-  //                               ),
-  //                               subtitle: Text(
-  //                                 "tap here for account info",
-  //                                 style: TextStyle(fontSize: 14.sp),
-  //                               ),
-  //                               onTap: () {},
-  //                             ),
-  //                           ),
-  //                         ],
-  //                       ),
-  //                       SizedBox(height: 10.h),
-  //                       Expanded(
-  //                         child: Container(
-  //                           decoration: BoxDecoration(
-  //                             color: Colors.white,
-  //                             borderRadius: BorderRadius.circular(8.r),
-  //                             boxShadow: [
-  //                               BoxShadow(
-  //                                 color: Colors.grey.withOpacity(0.2),
-  //                                 spreadRadius: 2,
-  //                                 blurRadius: 5,
-  //                                 offset: Offset(0, 3),
-  //                               ),
-  //                             ],
-  //                           ),
-  //                           child: Stack(
-  //                             children: [
-  //                               Positioned.fill(
-  //                                 child: Image.asset(
-  //                                   AppImages.chatBackground4,
-  //                                   fit: BoxFit.cover,
-  //                                 ),
-  //                               ),
-  //                               Padding(
-  //                                 padding: EdgeInsets.all(12.w),
-  //                                 child: ListView.builder(
-  //                                   itemCount: messages.length,
-  //                                   itemBuilder: (_, i) => MessageWidget(messages[i]),
-  //                                 ),
-  //                               ),
-  //                               SizedBox(height: 5.h),
-  //                               Positioned(
-  //                                 bottom: 0,
-  //                                 left: 0,
-  //                                 right: 0,
-  //                                 child: Container(
-  //                                   padding: EdgeInsets.only(top: 5.h),
-  //                                   color: Colors.white,
-  //                                   child: Row(
-  //                                     children: [
-  //                                       Icon(Icons.add, size: 28.sp, color: Colors.indigo),
-  //                                       SizedBox(width: 8.w),
-  //                                       Icon(Icons.camera_alt, size: 28.sp, color: Colors.indigo),
-  //                                       SizedBox(width: 8.w),
-  //                                       Expanded(
-  //                                         child: Container(
-  //                                           padding: EdgeInsets.symmetric(horizontal: 12.w),
-  //                                           decoration: BoxDecoration(
-  //                                             color: Colors.grey[100],
-  //                                             borderRadius: BorderRadius.circular(20.r),
-  //                                           ),
-  //                                           child: TextField(
-  //                                             decoration: InputDecoration(
-  //                                               border: InputBorder.none,
-  //                                               hintText: 'Message',
-  //                                             ),
-  //                                           ),
-  //                                         ),
-  //                                       ),
-  //                                       SizedBox(width: 8.w),
-  //                                       IconButton(
-  //                                         icon: Icon(Icons.send, color: Colors.indigo, size: 28.sp),
-  //                                         onPressed: () {
-  //                                           // send logic
-  //                                         },
-  //                                       ),
-  //                                     ],
-  //                                   ),
-  //                                 ),
-  //                               ),
-  //                             ],
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     ],
-  //                   ),
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-// }

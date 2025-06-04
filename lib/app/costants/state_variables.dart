@@ -15,7 +15,7 @@ class AppConstant {
     return _instance;
   }
 
-  static const String baseUrl = "https://famous-anthea-alladin-db67a8f9.koyeb.app";
+  static const String baseUrl = "https://just-chat-backend-production.up.railway.app";
 
   static Map<String, String> headerBearerOptionWithoutContentType(String token) => {
         'Authorization': 'Bearer $token',
